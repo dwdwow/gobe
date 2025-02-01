@@ -71,9 +71,9 @@ type WsPriceData struct {
 	UnixTime int64 `json:"unixTime"`
 	// Volume
 	V float64 `json:"v"`
-	// Token symbol
+	// Token/Pair symbol, e.g. "SOL"/"SOL-USDC"
 	Symbol string `json:"symbol"`
-	// Token address
+	// Token/Pair address
 	Address string `json:"address"`
 }
 
@@ -340,7 +340,7 @@ func (c *WsClient) Connect() error {
 	headers.Add("Sec-WebSocket-Protocol", "echo-protocol")
 	conn, reps, err := websocket.DefaultDialer.Dial(c.url, headers)
 	if err != nil {
-		return fmt.Errorf("eyebird: failed to connect to websocket: %w, http status code: %d", err, reps.StatusCode)
+		return fmt.Errorf("birdeye: failed to connect to websocket: %w, http status code: %d", err, reps.StatusCode)
 	}
 	c.ws = conn
 	go c.waiter()
@@ -353,13 +353,13 @@ func (c *WsClient) reConn() {
 	}
 	defer c.muReConn.Unlock()
 	for {
-		c.logger.Info("eyebird: retrying to connect to websocket...")
+		c.logger.Info("birdeye: retrying to connect to websocket...")
 		err := c.Connect()
 		if err != nil {
-			c.logger.Error("eyebird: failed to connect to websocket, retrying...", "error", err)
+			c.logger.Error("birdeye: failed to connect to websocket, retrying...", "error", err)
 			time.Sleep(5 * time.Second)
 		} else {
-			c.logger.Info("eyebird: reconnected to websocket")
+			c.logger.Info("birdeye: reconnected to websocket")
 			return
 		}
 	}
@@ -373,21 +373,21 @@ func (c *WsClient) waiter() {
 	for {
 		t, b, err := c.ws.ReadMessage()
 		if err != nil {
-			c.logger.Error("eyebird: websocket read error", "error", err)
+			c.logger.Error("birdeye: websocket read error", "error", err)
 			c.reConn()
 			continue
 		}
 		switch t {
 		case websocket.BinaryMessage:
-			c.logger.Info("eyebird: websocket binary message", "data", string(b))
+			c.logger.Info("birdeye: websocket binary message", "data", string(b))
 		case websocket.PingMessage:
-			c.logger.Info("eyebird: websocket ping message", "data", string(b))
+			c.logger.Info("birdeye: websocket ping message", "data", string(b))
 		case websocket.PongMessage:
-			c.logger.Info("eyebird: websocket pong message", "data", string(b))
+			c.logger.Info("birdeye: websocket pong message", "data", string(b))
 		case websocket.TextMessage:
 			go c.msgHandler(b)
 		case websocket.CloseMessage:
-			c.logger.Info("eyebird: websocket close message", "data", string(b))
+			c.logger.Info("birdeye: websocket close message", "data", string(b))
 		}
 	}
 }
@@ -396,17 +396,17 @@ func (c *WsClient) msgHandler(b []byte) {
 	d := map[string]any{}
 	err := json.Unmarshal(b, &d)
 	if err != nil {
-		c.logger.Error("eyebird: failed to unmarshal message", "error", err)
+		c.logger.Error("birdeye: failed to unmarshal message", "error", err)
 		return
 	}
 	t, ok := d["type"].(WsSubType)
 	if !ok {
-		c.logger.Error("eyebird: message type is not string", "data", string(b))
+		c.logger.Error("birdeye: message type is not string", "data", string(b))
 		return
 	}
 	b, err = json.Marshal(d["data"])
 	if err != nil {
-		c.logger.Error("eyebird: failed to marshal data", "error", err)
+		c.logger.Error("birdeye: failed to marshal data", "error", err)
 		return
 	}
 	var dd any
@@ -428,7 +428,7 @@ func (c *WsClient) msgHandler(b []byte) {
 	}
 	err = json.Unmarshal(b, dd)
 	if err != nil {
-		c.logger.Error("eyebird: failed to unmarshal data", "error", err)
+		c.logger.Error("birdeye: failed to unmarshal data", "error", err)
 		return
 	}
 	c.muSubers.RLock()
@@ -442,7 +442,7 @@ func (c *WsClient) msgHandler(b []byte) {
 			select {
 			case suber <- dd:
 			case <-timer.C:
-				c.logger.Error("eyebird: failed to send data to suber", "type", t)
+				c.logger.Error("birdeye: failed to send data to suber", "type", t)
 			}
 		}()
 	}
