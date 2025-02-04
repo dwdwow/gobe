@@ -388,6 +388,8 @@ type WsClient struct {
 
 	muRW sync.Mutex
 
+	subs []any
+
 	logger *slog.Logger
 }
 
@@ -427,10 +429,17 @@ func (c *WsClient) reConn() {
 		if err != nil {
 			c.logger.Error("birdeye: failed to connect to websocket, retrying...", "error", err)
 			time.Sleep(5 * time.Second)
-		} else {
-			c.logger.Info("birdeye: reconnected to websocket")
-			return
+			continue
 		}
+		c.logger.Info("birdeye: reconnected to websocket")
+		for _, sub := range c.subs {
+			c.logger.Info("birdeye: resubscribing", "sub", sub)
+			err := c.WsSub(sub)
+			if err != nil {
+				c.logger.Error("birdeye: failed to resubscribe", "error", err)
+			}
+		}
+		return
 	}
 }
 
