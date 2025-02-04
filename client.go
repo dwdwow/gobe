@@ -42,6 +42,43 @@ var statusCodeToError = map[int]error{
 	http.StatusInternalServerError: ErrInternalServer,
 }
 
+type ChainType string
+
+const (
+	CHAIN_SOLANA    = "solana"
+	CHAIN_ETHEREUM  = "ethereum"
+	CHAIN_ARBITRUM  = "arbitrum"
+	CHAIN_AVALANCHE = "avalanche"
+	CHAIN_BSC       = "bsc"
+	CHAIN_OPTIMISM  = "optimism"
+	CHAIN_POLYGON   = "polygon"
+	CHAIN_BASE      = "base"
+	CHAIN_ZKSYNC    = "zksync"
+	CHAIN_SUI       = "sui"
+)
+
+type AddressType string
+
+const (
+	ADDRESS_TYPE_TOKEN AddressType = "token"
+)
+
+type SortType string
+
+const (
+	SORT_TYPE_DESC SortType = "desc"
+	SORT_TYPE_ASC  SortType = "asc"
+)
+
+type TxType string
+
+const (
+	TX_TYPE_SWAP   TxType = "swap"
+	TX_TYPE_ADD    TxType = "add"
+	TX_TYPE_REMOVE TxType = "remove"
+	TX_TYPE_ALL    TxType = "all"
+)
+
 type ChartType string
 
 const (
@@ -60,6 +97,58 @@ const (
 	CHART_3D  ChartType = "3D"
 	CHART_1W  ChartType = "1W"
 	CHART_1M  ChartType = "1M"
+)
+
+type TimeType string
+
+const (
+	TIME_1h  TimeType = "1h"
+	TIME_2h  TimeType = "2h"
+	TIME_4h  TimeType = "4h"
+	TIME_8h  TimeType = "8h"
+	TIME_24h TimeType = "24h"
+)
+
+type RankType string
+
+const (
+	RANK_LIQUIDITY    RankType = "liquidity"
+	RANK_VOLUME24HUSD RankType = "volume24hUSD"
+)
+
+type TokenListSortType string
+
+const (
+	SORT_V24HUSD             TokenListSortType = "v24hUSD"
+	SORT_MARKET_CAP          TokenListSortType = "mc"
+	SORT_V24H_CHANGE_PERCENT TokenListSortType = "v24hChangePercent"
+)
+
+type MarketListSortType string
+
+const (
+	SORT_LIQUIDITY MarketListSortType = "liquidity"
+	SORT_VOLUME24H MarketListSortType = "volume24h"
+)
+
+type TokenTopTradersSortType string
+
+const (
+	SORT_VOLUME TokenTopTradersSortType = "volume"
+	SORT_TRADE  TokenTopTradersSortType = "trade"
+)
+
+type TopTradersTimeFrame string
+
+const (
+	TOP_TRADERS_TIME_30M TopTradersTimeFrame = "30m"
+	TOP_TRADERS_TIME_1H  TopTradersTimeFrame = "1h"
+	TOP_TRADERS_TIME_2H  TopTradersTimeFrame = "2h"
+	TOP_TRADERS_TIME_4H  TopTradersTimeFrame = "4h"
+	TOP_TRADERS_TIME_6H  TopTradersTimeFrame = "6h"
+	TOP_TRADERS_TIME_8H  TopTradersTimeFrame = "8h"
+	TOP_TRADERS_TIME_12H TopTradersTimeFrame = "12h"
+	TOP_TRADERS_TIME_24H TopTradersTimeFrame = "24h"
 )
 
 type RespData[D any] struct {
@@ -112,16 +201,16 @@ type RespOHLCVItem struct {
 }
 
 type RespOHLCVBaseQuoteItem struct {
-	O            float64   `json:"o"`
-	C            float64   `json:"c"`
-	H            float64   `json:"h"`
-	L            float64   `json:"l"`
-	BaseAddress  string    `json:"baseAddress"`
-	QuoteAddress string    `json:"quoteAddress"`
-	VBase        float64   `json:"vBase"`
-	VQuote       float64   `json:"vQuote"`
-	Type         ChartType `json:"type"`
-	UnixTime     int64     `json:"unixTime"`
+	O float64 `json:"o"`
+	C float64 `json:"c"`
+	H float64 `json:"h"`
+	L float64 `json:"l"`
+	// BaseAddress  string    `json:"baseAddress"`
+	// QuoteAddress string    `json:"quoteAddress"`
+	VBase  float64 `json:"vBase"`
+	VQuote float64 `json:"vQuote"`
+	// Type         ChartType `json:"type"`
+	UnixTime int64 `json:"unixTime"`
 }
 
 type RespTradesByTokenTokenInfo struct {
@@ -144,7 +233,7 @@ type RespTradesByTokenItem struct {
 	TxHash        string                     `json:"txHash"`
 	Source        string                     `json:"source"`
 	BlockUnixTime int64                      `json:"blockUnixTime"`
-	TxType        string                     `json:"txType"`
+	TxType        TxType                     `json:"txType"`
 	Owner         string                     `json:"owner"`
 	Side          string                     `json:"side"`
 	Alias         *string                    `json:"alias"`
@@ -171,6 +260,7 @@ type RespTradesByPairTokenInfo struct {
 
 type RespTradesByPairItem struct {
 	TxHash        string                    `json:"txHash"`
+	TxType        TxType                    `json:"txType"`
 	Source        string                    `json:"source"`
 	BlockUnixTime int64                     `json:"blockUnixTime"`
 	Address       string                    `json:"address"`
@@ -535,6 +625,10 @@ type RespToken struct {
 	LastTradeUnixTime int64   `json:"lastTradeUnixTime"`
 }
 
+type RespTokenListV2Url struct {
+	Url string `json:"url"`
+}
+
 type RespTokenSecurity struct {
 	CreatorAddress                 *string  `json:"creatorAddress"`
 	OwnerAddress                   *string  `json:"ownerAddress"`
@@ -608,7 +702,7 @@ type RespNewTokenListingItem struct {
 	Symbol           string  `json:"symbol"`
 	Name             string  `json:"name"`
 	Decimals         int64   `json:"decimals"`
-	LiquidityAddedAt int64   `json:"liquidityAddedAt"`
+	LiquidityAddedAt string  `json:"liquidityAddedAt"`
 	Liquidity        float64 `json:"liquidity"`
 }
 
@@ -640,6 +734,19 @@ type RespContractLabel struct {
 	Metadata struct {
 		Icon string `json:"icon"`
 	} `json:"metadata"`
+}
+
+type RespWalletHistory struct {
+	TxHash        string                    `json:"txHash"`
+	BlockNumber   int64                     `json:"blockNumber"`
+	BlockTime     string                    `json:"blockTime"`
+	Status        bool                      `json:"status"`
+	From          string                    `json:"from"`
+	To            string                    `json:"to"`
+	Fee           int64                     `json:"fee"`
+	MainAction    string                    `json:"mainAction"`
+	BalanceChange []RespWalletBalanceChange `json:"balanceChange"`
+	ContractLabel RespContractLabel         `json:"contractLabel"`
 }
 
 type RespWalletPortfolioItem struct {
@@ -678,7 +785,7 @@ func (c *Client) newHeader(chains ...string) http.Header {
 	header.Set("content-type", "application/json")
 	header.Set("x-api-key", c.apiKey)
 	if len(chains) > 0 {
-		header.Set("chain", strings.Join(chains, ","))
+		header.Set("x-chain", strings.Join(chains, ","))
 	}
 	return header
 }
@@ -697,12 +804,6 @@ func get[D any](ctx context.Context, clt *Client, path string, chains []string, 
 			value = strconv.FormatInt(v, 10)
 		case float64:
 			value = strconv.FormatFloat(v, 'f', -1, 64)
-		case bool:
-			if v {
-				value = "True"
-			} else {
-				value = "False"
-			}
 		case []string:
 			value = strings.Join(v, ",")
 		default:
@@ -713,12 +814,12 @@ func get[D any](ctx context.Context, clt *Client, path string, chains []string, 
 	ul += "?" + ps.Encode()
 	req, err := http.NewRequestWithContext(ctx, "GET", ul, nil)
 	if err != nil {
-		return *new(D), err
+		return *new(D), fmt.Errorf("birdeye: new request: %w", err)
 	}
 	req.Header = clt.newHeader(chains...)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return *new(D), err
+		return *new(D), fmt.Errorf("birdeye: do request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -726,19 +827,25 @@ func get[D any](ctx context.Context, clt *Client, path string, chains []string, 
 
 	err = statusCodeToError[statusCode]
 	if err != nil {
-		return *new(D), err
+		return *new(D), fmt.Errorf("birdeye: status code: %d, message: %s", statusCode, err)
 	}
+
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return *new(D), fmt.Errorf("birdeye: read response: %w", err)
+	// }
+	// fmt.Println(string(body))
 
 	var rd RespData[D]
 	if err := json.NewDecoder(resp.Body).Decode(&rd); err != nil {
-		return *new(D), err
+		return *new(D), fmt.Errorf("birdeye: decode response: %w", err)
 	}
 
 	if statusCode == http.StatusOK {
 		return rd.Data, nil
 	}
 
-	return *new(D), fmt.Errorf("birdeye error: status code: %d, message: %s", statusCode, rd.Message)
+	return *new(D), fmt.Errorf("birdeye: status code: %d, message: %s", statusCode, rd.Message)
 }
 
 func (c *Client) SupportedNetworks() ([]string, error) {
@@ -756,8 +863,8 @@ func (c *Client) Price(chain string, token string, includeLiquidity bool, checkL
 	return get[RespPrice](context.Background(), c, "/defi/price", []string{chain}, params...)
 }
 
-func (c *Client) PriceHistory(chain string, address string, addressType string, chartType ChartType, timeFrom, timeTo int64) ([]RespOHLCVItem, error) {
-	return get[[]RespOHLCVItem](context.Background(), c, "/defi/history_price", []string{chain},
+func (c *Client) PriceHistory(chain string, address string, addressType AddressType, chartType ChartType, timeFrom, timeTo int64) (RespItems[RespPriceHistoryItem], error) {
+	return get[RespItems[RespPriceHistoryItem]](context.Background(), c, "/defi/history_price", []string{chain},
 		"address", address, "address_type", addressType, "type", chartType, "time_from", timeFrom, "time_to", timeTo)
 }
 
@@ -784,8 +891,8 @@ func (c *Client) MultiPrice(chain string, listAddress []string, includeLiquidity
 // Returns:
 //   - []RespOHLCVItem: Array of OHLCV data points
 //   - error: Any error that occurred during the request
-func (c *Client) OHLCVByToken(chain string, address string, chartType ChartType, timeFrom, timeTo int64) ([]RespOHLCVItem, error) {
-	return get[[]RespOHLCVItem](context.Background(), c, "/defi/ohlcv", []string{chain},
+func (c *Client) OHLCVByToken(chain string, address string, chartType ChartType, timeFrom, timeTo int64) (RespItems[RespOHLCVItem], error) {
+	return get[RespItems[RespOHLCVItem]](context.Background(), c, "/defi/ohlcv", []string{chain},
 		"address", address, "type", chartType, "time_from", timeFrom, "time_to", timeTo)
 }
 
@@ -801,8 +908,8 @@ func (c *Client) OHLCVByToken(chain string, address string, chartType ChartType,
 // Returns:
 //   - []RespOHLCVBaseQuoteItem: Array of OHLCV data points for the trading pair
 //   - error: Any error that occurred during the request
-func (c *Client) OHLCVByPair(chain string, address string, chartType ChartType, timeFrom, timeTo int64) ([]RespOHLCVBaseQuoteItem, error) {
-	return get[[]RespOHLCVBaseQuoteItem](context.Background(), c, "/defi/ohlcv_pair", []string{chain},
+func (c *Client) OHLCVByPair(chain string, address string, chartType ChartType, timeFrom, timeTo int64) (RespItems[RespOHLCVItem], error) {
+	return get[RespItems[RespOHLCVItem]](context.Background(), c, "/defi/ohlcv/pair", []string{chain},
 		"address", address, "type", chartType, "time_from", timeFrom, "time_to", timeTo)
 }
 
@@ -819,8 +926,8 @@ func (c *Client) OHLCVByPair(chain string, address string, chartType ChartType, 
 // Returns:
 //   - []RespOHLCVBaseQuoteItem: Array of OHLCV data points for the trading pair
 //   - error: Any error that occurred during the request
-func (c *Client) OHLCVByBaseQuote(chain string, baseAddress string, quoteAddress string, chartType ChartType, timeFrom, timeTo int64) ([]RespOHLCVBaseQuoteItem, error) {
-	return get[[]RespOHLCVBaseQuoteItem](context.Background(), c, "/defi/ohlcv/base_quote", []string{chain},
+func (c *Client) OHLCVByBaseQuote(chain string, baseAddress string, quoteAddress string, chartType ChartType, timeFrom, timeTo int64) (RespItems[RespOHLCVBaseQuoteItem], error) {
+	return get[RespItems[RespOHLCVBaseQuoteItem]](context.Background(), c, "/defi/ohlcv/base_quote", []string{chain},
 		"base_address", baseAddress, "quote_address", quoteAddress, "type", chartType, "time_from", timeFrom, "time_to", timeTo)
 }
 
@@ -837,7 +944,7 @@ func (c *Client) OHLCVByBaseQuote(chain string, baseAddress string, quoteAddress
 // Returns:
 //   - RespItems[RespTradesByTokenItem]: Paginated list of trade records
 //   - error: Any error that occurred during the request
-func (c *Client) TradesByToken(chain string, address string, sortType string, offset int, limit int, txType string) (RespItems[RespTradesByTokenItem], error) {
+func (c *Client) TradesByToken(chain string, address string, sortType SortType, offset int, limit int, txType TxType) (RespItems[RespTradesByTokenItem], error) {
 	return get[RespItems[RespTradesByTokenItem]](context.Background(), c, "/defi/txs/token", []string{chain},
 		"address", address,
 		"sort_type", sortType,
@@ -859,7 +966,7 @@ func (c *Client) TradesByToken(chain string, address string, sortType string, of
 // Returns:
 //   - RespItems[RespTradesByPairItem]: Paginated list of trade records
 //   - error: Any error that occurred during the request
-func (c *Client) TradesByPair(chain string, address string, sortType string, offset int, limit int, txType string) (RespItems[RespTradesByPairItem], error) {
+func (c *Client) TradesByPair(chain string, address string, sortType SortType, offset int, limit int, txType TxType) (RespItems[RespTradesByPairItem], error) {
 	return get[RespItems[RespTradesByPairItem]](context.Background(), c, "/defi/txs/pair", []string{chain},
 		"address", address,
 		"sort_type", sortType,
@@ -894,7 +1001,7 @@ func (c *Client) HistoricalPriceByUnix(chain string, address string, unixTime in
 // Returns:
 //   - RespSinglePriceVolume: Price and volume data for the specified token and time period
 //   - error: Any error that occurred during the request
-func (c *Client) PriceVolumeByToken(chain string, address string, timeType string) (RespSinglePriceVolume, error) {
+func (c *Client) PriceVolumeByToken(chain string, address string, timeType TimeType) (RespSinglePriceVolume, error) {
 	return get[RespSinglePriceVolume](context.Background(), c, "/defi/price_volume/single", []string{chain},
 		"address", address,
 		"type", timeType)
@@ -910,7 +1017,7 @@ func (c *Client) PriceVolumeByToken(chain string, address string, timeType strin
 // Returns:
 //   - []RespSinglePriceVolume: Price and volume data for the specified tokens and time period
 //   - error: Any error that occurred during the request
-func (c *Client) PriceVolumeByTokens(chain string, listAddress string, timeType string) ([]RespSinglePriceVolume, error) {
+func (c *Client) PriceVolumeByTokens(chain string, listAddress []string, timeType TimeType) ([]RespSinglePriceVolume, error) {
 	return get[[]RespSinglePriceVolume](context.Background(), c, "/defi/price_volume/multi", []string{chain},
 		"list_address", listAddress,
 		"type", timeType)
@@ -928,7 +1035,7 @@ func (c *Client) PriceVolumeByTokens(chain string, listAddress string, timeType 
 // Returns:
 //   - RespTrendingTokens: List of trending tokens with metadata
 //   - error: Any error that occurred during the request
-func (c *Client) TrendingTokens(chain string, sortBy string, sortType string, offset int, limit int) (RespTrendingTokens, error) {
+func (c *Client) TrendingTokens(chain string, sortBy RankType, sortType SortType, offset int, limit int) (RespTrendingTokens, error) {
 	if limit > 20 {
 		limit = 20
 	}
@@ -961,9 +1068,9 @@ func (c *Client) TrendingTokens(chain string, sortBy string, sortType string, of
 //   - error: Any error that occurred during the request
 //
 // Note: beforeTime and afterTime cannot be used simultaneously
-func (c *Client) TradeByTokenAndTime(chain string, address string, beforeTime, afterTime int64, txType string, offset int, limit int) ([]RespTradesByTokenItem, error) {
+func (c *Client) TradeByTokenAndTime(chain string, address string, beforeTime, afterTime int64, txType TxType, offset int, limit int) (RespItems[RespTradesByTokenItem], error) {
 	if beforeTime > 0 && afterTime > 0 {
-		return []RespTradesByTokenItem{}, fmt.Errorf("beforeTime and afterTime cannot be used simultaneously")
+		return RespItems[RespTradesByTokenItem]{}, fmt.Errorf("beforeTime and afterTime cannot be used simultaneously")
 	}
 
 	if limit > 50 {
@@ -995,12 +1102,12 @@ func (c *Client) TradeByTokenAndTime(chain string, address string, beforeTime, a
 
 	d, err := get[RespItems[RespTradesByTokenItem]](context.Background(), c, "/defi/txs/token/seek_by_time", []string{chain}, params...)
 	if err != nil {
-		return []RespTradesByTokenItem{}, err
+		return RespItems[RespTradesByTokenItem]{}, err
 	}
-	return d.Items, nil
+	return d, nil
 }
 
-// TradesSeekByTime retrieves transaction records for a specific pair address based on Unix time.
+// TradesByPairAndTime retrieves transaction records for a specific pair address based on Unix time.
 // It allows querying up to 10,000 records from a specified point in time.
 //
 // Parameters:
@@ -1022,13 +1129,13 @@ func (c *Client) TradeByTokenAndTime(chain string, address string, beforeTime, a
 //   - beforeTime and afterTime cannot be used simultaneously (will return error 422)
 //   - For sequential queries, adjust beforeTime/afterTime based on the last record's timestamp
 //   - Maximum of 10,000 records can be retrieved from a specified time point
-func (c *Client) TradesSeekByTime(chain string, address string, beforeTime, afterTime int64, txType string, offset int, limit int) ([]RespTradesByPairItem, error) {
+func (c *Client) TradesByPairAndTime(chain string, address string, beforeTime, afterTime int64, txType TxType, offset int, limit int) (RespItems[RespTradesByPairItem], error) {
 	if beforeTime > 0 && afterTime > 0 {
-		return []RespTradesByPairItem{}, fmt.Errorf("beforeTime and afterTime cannot be used simultaneously (error 422)")
+		return RespItems[RespTradesByPairItem]{}, fmt.Errorf("beforeTime and afterTime cannot be used simultaneously (error 422)")
 	}
 
 	if beforeTime == 0 && afterTime == 0 {
-		return []RespTradesByPairItem{}, fmt.Errorf("either beforeTime or afterTime must be specified")
+		return RespItems[RespTradesByPairItem]{}, fmt.Errorf("either beforeTime or afterTime must be specified")
 	}
 
 	if limit > 50 {
@@ -1063,9 +1170,9 @@ func (c *Client) TradesSeekByTime(chain string, address string, beforeTime, afte
 
 	d, err := get[RespItems[RespTradesByPairItem]](context.Background(), c, "/defi/txs/pair/seek_by_time", []string{chain}, params...)
 	if err != nil {
-		return []RespTradesByPairItem{}, err
+		return RespItems[RespTradesByPairItem]{}, err
 	}
-	return d.Items, nil
+	return d, nil
 }
 
 // TokenOverview returns detailed information about a token, including price changes, volume, and social metrics
@@ -1086,7 +1193,7 @@ func (c *Client) TokenOverview(chain string, address string) (RespTokenOverview,
 // Returns:
 //   - RespItems[RespToken]: Paginated list of token information
 //   - error: Any error that occurred during the request
-func (c *Client) TokenList(chain string, sortType string, sortOrder string, offset int, limit int, minLiquidity float64) (RespItems[RespToken], error) {
+func (c *Client) TokenList(chain string, sortBy TokenListSortType, sortType SortType, offset int, limit int, minLiquidity float64) (RespItems[RespToken], error) {
 	if limit > 50 {
 		limit = 50
 	}
@@ -1100,47 +1207,33 @@ func (c *Client) TokenList(chain string, sortType string, sortOrder string, offs
 		offset = 1000
 	}
 
-	return get[RespItems[RespToken]](context.Background(), c, "/defi/tokenlist", []string{chain},
+	params := []any{
+		"sort_by", sortBy,
 		"sort_type", sortType,
-		"sort_order", sortOrder,
 		"offset", offset,
 		"limit", limit,
-		"min_liquidity", minLiquidity)
+	}
+
+	if minLiquidity > 0 {
+		params = append(params, "min_liquidity", minLiquidity)
+	}
+
+	return get[RespItems[RespToken]](context.Background(), c, "/defi/tokenlist", []string{chain}, params...)
 }
 
-// TokenListV2 retrieves a list of tokens using the v2 API endpoint
+// TokenListV2 retrieves a URL to download the complete token list
 //
 // Parameters:
 //   - chain: The blockchain network
-//   - sortBy: Attribute to sort tokens by ("v24hUSD", "mc", "v24hChangePercent", default: "v24hUSD")
-//   - sortOrder: Sort order ("asc" or "desc", default: "desc")
-//   - offset: Starting index for the list (0-1000, default: 0)
-//   - limit: Maximum number of tokens to retrieve (1-50, default: 50)
-//   - minLiquidity: Minimum liquidity filter (default: 100)
 //
 // Returns:
-//   - RespItems[RespToken]: Paginated list of token information
+//   - RespTokenListV2Url: URL to download the complete token list
 //   - error: Any error that occurred during the request
-func (c *Client) TokenListV2(chain string, sortBy string, sortOrder string, offset int, limit int, minLiquidity float64) (RespItems[RespToken], error) {
-	if limit > 50 {
-		limit = 50
-	}
-	if limit <= 0 {
-		limit = 50
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	if offset > 1000 {
-		offset = 1000
-	}
-
-	return get[RespItems[RespToken]](context.Background(), c, "/defi/v2/tokens/all", []string{chain},
-		"sort_by", sortBy,
-		"sort_order", sortOrder,
-		"offset", offset,
-		"limit", limit,
-		"min_liquidity", minLiquidity)
+//
+// Note: The returned URL can be used to download a JSON file containing
+// the complete list of tokens and their metadata for the specified chain.
+func (c *Client) TokenListV2(chain string) (RespTokenListV2Url, error) {
+	return get[RespTokenListV2Url](context.Background(), c, "/defi/v2/tokens/all", []string{chain})
 }
 
 // TokenSecurity retrieves security information for a specific token
@@ -1166,8 +1259,8 @@ func (c *Client) TokenSecurity(chain string, address string) (RespTokenSecurity,
 // Returns:
 //   - RespTokenSecurity: Creation information for the token
 //   - error: Any error that occurred during the request
-func (c *Client) TokenCreationInfo(chain string, address string) (RespTokenSecurity, error) {
-	return get[RespTokenSecurity](context.Background(), c, "/defi/token_creation_info", []string{chain},
+func (c *Client) TokenCreationInfo(chain string, address string) (RespTokenCreationInfo, error) {
+	return get[RespTokenCreationInfo](context.Background(), c, "/defi/token_creation_info", []string{chain},
 		"address", address)
 }
 
@@ -1184,7 +1277,7 @@ func (c *Client) TokenCreationInfo(chain string, address string) (RespTokenSecur
 // Returns:
 //   - RespItems[RespToken]: Paginated list of market data
 //   - error: Any error that occurred during the request
-func (c *Client) MarketList(chain string, address string, sortBy string, sortType string, offset int, limit int) (RespItems[RespToken], error) {
+func (c *Client) MarketList(chain string, address string, sortBy MarketListSortType, sortType SortType, offset int, limit int) (RespItems[RespMarketItem], error) {
 	if limit > 10 {
 		limit = 10
 	}
@@ -1195,7 +1288,7 @@ func (c *Client) MarketList(chain string, address string, sortBy string, sortTyp
 		offset = 0
 	}
 
-	return get[RespItems[RespToken]](context.Background(), c, "/defi/v2/markets", []string{chain},
+	return get[RespItems[RespMarketItem]](context.Background(), c, "/defi/v2/markets", []string{chain},
 		"address", address,
 		"sort_by", sortBy,
 		"sort_type", sortType,
@@ -1214,7 +1307,7 @@ func (c *Client) MarketList(chain string, address string, sortBy string, sortTyp
 // Returns:
 //   - RespItems[RespToken]: Paginated list of newly listed tokens
 //   - error: Any error that occurred during the request
-func (c *Client) NewTokenListing(chain string, timeTo int64, limit int, memePlatformEnabled bool) (RespItems[RespToken], error) {
+func (c *Client) NewTokenListing(chain string, timeTo int64, limit int, memePlatformEnabled bool) (RespItems[RespNewTokenListingItem], error) {
 	if limit > 10 {
 		limit = 10
 	}
@@ -1231,7 +1324,7 @@ func (c *Client) NewTokenListing(chain string, timeTo int64, limit int, memePlat
 		params = append(params, "meme_platform_enabled", true)
 	}
 
-	return get[RespItems[RespToken]](context.Background(), c, "/defi/v2/tokens/new_listing", []string{chain}, params...)
+	return get[RespItems[RespNewTokenListingItem]](context.Background(), c, "/defi/v2/tokens/new_listing", []string{chain}, params...)
 }
 
 // TokenTopTraders retrieves the top traders for a specific token based on volume or trade count
@@ -1248,7 +1341,7 @@ func (c *Client) NewTokenListing(chain string, timeTo int64, limit int, memePlat
 // Returns:
 //   - RespItems[RespToken]: Paginated list of top traders
 //   - error: Any error that occurred during the request
-func (c *Client) TokenTopTraders(chain string, address string, sortBy string, sortType string, timeFrame string, offset int, limit int) (RespItems[RespToken], error) {
+func (c *Client) TokenTopTraders(chain string, address string, sortBy TokenTopTradersSortType, sortType SortType, timeFrame TopTradersTimeFrame, offset int64, limit int64) (RespItems[RespTopTraderItem], error) {
 	if limit > 10 {
 		limit = 10
 	}
@@ -1259,7 +1352,7 @@ func (c *Client) TokenTopTraders(chain string, address string, sortBy string, so
 		offset = 0
 	}
 
-	return get[RespItems[RespToken]](context.Background(), c, "/defi/v2/tokens/top_traders", []string{chain},
+	return get[RespItems[RespTopTraderItem]](context.Background(), c, "/defi/v2/tokens/top_traders", []string{chain},
 		"address", address,
 		"sort_by", sortBy,
 		"sort_type", sortType,
@@ -1279,25 +1372,18 @@ func (c *Client) TokenTopTraders(chain string, address string, sortBy string, so
 // Returns:
 //   - RespItems[RespTradesByTokenItem]: List of transactions for the wallet
 //   - error: Any error that occurred during the request
-func (c *Client) WalletTxHistories(chain string, wallet string, limit int, before string) ([]RespTradesByTokenItem, error) {
+func (c *Client) WalletTxHistories(chain string, wallet string, limit int, before string) (map[ChainType][]RespWalletHistory, error) {
 	if limit <= 0 {
 		limit = 50
 	}
-
 	params := []any{
 		"wallet", wallet,
 		"limit", limit,
 	}
-
 	if before != "" {
 		params = append(params, "before", before)
 	}
-
-	d, err := get[RespItems[RespTradesByTokenItem]](context.Background(), c, "/v1/wallet/tx_list", []string{chain}, params...)
-	if err != nil {
-		return []RespTradesByTokenItem{}, err
-	}
-	return d.Items, nil
+	return get[map[ChainType][]RespWalletHistory](context.Background(), c, "/v1/wallet/tx_list", []string{chain}, params...)
 }
 
 // WalletPortfolio retrieves the token portfolio for a specific wallet address
@@ -1309,10 +1395,6 @@ func (c *Client) WalletTxHistories(chain string, wallet string, limit int, befor
 // Returns:
 //   - RespItems[RespToken]: List of tokens held in the wallet
 //   - error: Any error that occurred during the request
-func (c *Client) WalletPortfolio(chain string, wallet string) ([]RespToken, error) {
-	d, err := get[RespItems[RespToken]](context.Background(), c, "/v1/wallet/token_list", []string{chain}, "wallet", wallet)
-	if err != nil {
-		return []RespToken{}, err
-	}
-	return d.Items, nil
+func (c *Client) WalletPortfolio(chain string, wallet string) (RespWalletPortfolio, error) {
+	return get[RespWalletPortfolio](context.Background(), c, "/v1/wallet/token_list", []string{chain}, "wallet", wallet)
 }
