@@ -6,10 +6,18 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+)
+
+type WsQueryType string
+
+const (
+	QUERY_TYPE_SIMPLE  WsQueryType = "simple"
+	QUERY_TYPE_COMPLEX WsQueryType = "complex"
 )
 
 type WsSubType string
@@ -35,23 +43,50 @@ const (
 type WsDataType string
 
 const (
-	PRICE_DATA             WsDataType = "PRICE_DATA"
-	TXS_DATA               WsDataType = "TXS_DATA"
-	BASE_QUOTE_PRICE_DATA  WsDataType = "BASE_QUOTE_PRICE_DATA"
-	TOKEN_NEW_LISTING_DATA WsDataType = "TOKEN_NEW_LISTING_DATA"
-	NEW_PAIR_DATA          WsDataType = "NEW_PAIR_DATA"
-	LARGE_TRADE_TXS_DATA   WsDataType = "LARGE_TRADE_TXS_DATA"
-	WALLET_TXS_DATA        WsDataType = "WALLET_TXS_DATA"
+	WS_WELCOME_DATA           WsDataType = "WELCOME"
+	WS_ERROR_DATA             WsDataType = "ERROR"
+	WS_PRICE_DATA             WsDataType = "PRICE_DATA"
+	WS_TXS_DATA               WsDataType = "TXS_DATA"
+	WS_BASE_QUOTE_PRICE_DATA  WsDataType = "BASE_QUOTE_PRICE_DATA"
+	WS_TOKEN_NEW_LISTING_DATA WsDataType = "TOKEN_NEW_LISTING_DATA"
+	WS_NEW_PAIR_DATA          WsDataType = "NEW_PAIR_DATA"
+	WS_TXS_LARGE_TRADE_DATA   WsDataType = "TXS_LARGE_TRADE_DATA"
+	WS_WALLET_TXS_DATA        WsDataType = "WALLET_TXS_DATA"
 )
+
+type WsCurrency string
+
+const (
+	WS_CURRENCY_USD  WsCurrency = "usd"
+	WS_CURRENCY_PAIR WsCurrency = "pair"
+)
+
+type WsSubData[D any] struct {
+	Type WsSubType `json:"type"`
+	Data D         `json:"data"`
+}
+
+type WsComplexSubData struct {
+	QueryType WsQueryType `json:"queryType"`
+	Query     string      `json:"query"`
+}
+
+func JoinQuery(queries ...string) string {
+	return strings.Join(queries, " OR ")
+}
 
 type WsPriceSubData struct {
 	// QueryType: "simple"
-	QueryType string `json:"queryType"`
+	QueryType WsQueryType `json:"queryType"`
 	// ChartType: "1m", "3m"...
-	ChartType string `json:"chartType"`
-	Address   string `json:"address"`
+	ChartType ChartType `json:"chartType"`
+	Address   string    `json:"address"`
 	// Currency: "usd"...
-	Currency string `json:"currency"`
+	Currency WsCurrency `json:"currency"`
+}
+
+func (d WsPriceSubData) Query() string {
+	return fmt.Sprintf("(address = %s AND chartType = %s AND currency = %s)", d.Address, d.ChartType, d.Currency)
 }
 
 type WsPriceData struct {
@@ -66,7 +101,7 @@ type WsPriceData struct {
 	// Event type (e.g. "ohlcv")
 	EventType string `json:"eventType"`
 	// Chart type (e.g. "1m")
-	Type string `json:"type"`
+	Type ChartType `json:"type"`
 	// UnixTime seconds
 	UnixTime int64 `json:"unixTime"`
 	// Volume
@@ -79,9 +114,19 @@ type WsPriceData struct {
 
 type WsTxsSubData struct {
 	// QueryType: "simple"
-	QueryType string `json:"queryType"`
+	QueryType WsQueryType `json:"queryType"`
+	// set token address or pair address, not both
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address,omitempty"`
+	// Pair address
+	PairAddress string `json:"pairAddress,omitempty"`
+}
+
+func (d WsTxsSubData) Query() string {
+	if d.Address != "" {
+		return fmt.Sprintf("address = %s", d.Address)
+	}
+	return fmt.Sprintf("pairAddress = %s", d.PairAddress)
 }
 
 type WsTxTokenInfo struct {
@@ -92,7 +137,7 @@ type WsTxTokenInfo struct {
 	// Token address
 	Address string `json:"address"`
 	// Raw amount
-	Amount int64 `json:"amount"`
+	Amount any `json:"amount"`
 	// Transaction type
 	Type string `json:"type"`
 	// Swap type (from/to)
@@ -104,7 +149,7 @@ type WsTxTokenInfo struct {
 	// Nearest price if price is not available
 	NearestPrice float64 `json:"nearestPrice"`
 	// Raw change amount
-	ChangeAmount int64 `json:"changeAmount"`
+	ChangeAmount any `json:"changeAmount"`
 	// UI formatted change amount
 	UiChangeAmount float64 `json:"uiChangeAmount"`
 	// Token icon URL
@@ -140,7 +185,7 @@ type WsBaseQuotePriceSubData struct {
 	// Quote token address
 	QuoteAddress string `json:"quoteAddress"`
 	// Chart type/interval
-	ChartType string `json:"chartType"`
+	ChartType ChartType `json:"chartType"`
 }
 
 type WsBaseQuotePriceData struct {
@@ -158,7 +203,7 @@ type WsBaseQuotePriceData struct {
 	Type string `json:"type"`
 	// Unix timestamp
 	UnixTime int64 `json:"unixTime"`
-	// Volume
+	// Volume is 0
 	V float64 `json:"v"`
 	// Base token address
 	BaseAddress string `json:"baseAddress"`
@@ -166,6 +211,13 @@ type WsBaseQuotePriceData struct {
 	QuoteAddress string `json:"quoteAddress"`
 }
 
+// WsTokenNewListingSubData represents subscription data for new token listing notifications
+//
+// Parameters:
+//   - MemePlatformEnabled: Optional. Set to true to receive new meme token listings from platforms like pump.fun.
+//     If not set, no listings from meme platforms will be received.
+//   - MinLiquidity: Optional. Minimum liquidity threshold for notifications. Must be set higher than system minimum of 10.
+//   - MaxLiquidity: Optional. Maximum liquidity threshold for notifications. When provided, must be higher than MinLiquidity.
 type WsTokenNewListingSubData struct {
 	// Whether meme platform is enabled
 	MemePlatformEnabled bool `json:"meme_platform_enabled,omitempty"`
@@ -185,9 +237,9 @@ type WsTokenNewListingData struct {
 	// Token symbol
 	Symbol string `json:"symbol"`
 	// Token liquidity in USD
-	Liquidity string `json:"liquidity"`
+	Liquidity float64 `json:"liquidity"`
 	// Unix timestamp when liquidity was added
-	LiquidityAddedAt int64 `json:"liquidityAddedAt"`
+	LiquidityAddedAt string `json:"liquidityAddedAt"`
 }
 
 type WsNewPairSubData struct {
@@ -222,12 +274,24 @@ type WsNewPairData struct {
 	// Transaction hash
 	TxHash string `json:"txHash"`
 	// Block time
-	BlockTime int64 `json:"blockTime"`
+	BlockTime string `json:"blockTime"`
 }
 
+// WsLargeTradeTxsSubData represents the subscription data for large trade transactions.
+//
+// The min_volume parameter is mandatory and sets the lower bound for trade volume in USD.
+// It must be at least 1000 USD.
+//
+// The max_volume parameter is optional but when provided must be greater than min_volume.
+// Trades with volumes outside the specified range will be filtered out.
+//
+// The subscription will return trades for all tokens meeting the volume criteria,
+// regardless of the specific tokens or trading pairs involved.
 type WsLargeTradeTxsSubData struct {
+	// SubType: "SUBSCRIBE_LARGE_TRADE_TXS"
+	Type WsSubType `json:"type"`
 	// Minimum volume in USD
-	MinVolume float64 `json:"min_volume,omitempty"`
+	MinVolume float64 `json:"min_volume"`
 	// Maximum volume in USD
 	MaxVolume float64 `json:"max_volume,omitempty"`
 }
@@ -244,7 +308,7 @@ type WsLargeTradeTxsTokenInfo struct {
 	// Token amount in UI format
 	UiAmount float64 `json:"uiAmount"`
 	// Token price
-	Price *float64 `json:"price"`
+	Price float64 `json:"price"`
 	// Nearest token price
 	NearestPrice float64 `json:"nearestPrice"`
 	// Token amount change in UI format
@@ -320,7 +384,9 @@ type WsClient struct {
 	muReConn sync.RWMutex
 
 	muSubers sync.RWMutex
-	subers   map[WsSubType][]chan any
+	subers   map[WsDataType][]chan any
+
+	muRW sync.Mutex
 
 	logger *slog.Logger
 }
@@ -330,10 +396,10 @@ func NewWsClient(chain, apiKey string, logger *slog.Logger) *WsClient {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	}
 	url := fmt.Sprintf("wss://public-api.birdeye.so/socket/%s?x-api-key=%s", chain, apiKey)
-	return &WsClient{url: url, logger: logger}
+	return &WsClient{url: url, subers: make(map[WsDataType][]chan any), logger: logger}
 }
 
-func (c *WsClient) Connect() error {
+func (c *WsClient) Start() error {
 	headers := http.Header{}
 	headers.Add("Origin", "ws://public-api.birdeye.so")
 	headers.Add("Sec-WebSocket-Origin", "ws://public-api.birdeye.so")
@@ -354,7 +420,7 @@ func (c *WsClient) reConn() {
 	defer c.muReConn.Unlock()
 	for {
 		c.logger.Info("birdeye: retrying to connect to websocket...")
-		err := c.Connect()
+		err := c.Start()
 		if err != nil {
 			c.logger.Error("birdeye: failed to connect to websocket, retrying...", "error", err)
 			time.Sleep(5 * time.Second)
@@ -399,7 +465,7 @@ func (c *WsClient) msgHandler(b []byte) {
 		c.logger.Error("birdeye: failed to unmarshal message", "error", err)
 		return
 	}
-	t, ok := d["type"].(WsSubType)
+	t, ok := d["type"].(string)
 	if !ok {
 		c.logger.Error("birdeye: message type is not string", "data", string(b))
 		return
@@ -410,21 +476,30 @@ func (c *WsClient) msgHandler(b []byte) {
 		return
 	}
 	var dd any
-	switch t {
-	case SUBSCRIBE_PRICE:
+	switch WsDataType(t) {
+	case WS_WELCOME_DATA:
+		c.logger.Info("birdeye: welcome message", "data", string(b))
+		return
+	case WS_ERROR_DATA:
+		c.logger.Error("birdeye: error message", "data", string(b))
+		return
+	case WS_PRICE_DATA:
 		dd = &WsPriceData{}
-	case SUBSCRIBE_TXS:
+	case WS_TXS_DATA:
 		dd = &WsTxsData{}
-	case SUBSCRIBE_BASE_QUOTE_PRICE:
+	case WS_BASE_QUOTE_PRICE_DATA:
 		dd = &WsBaseQuotePriceData{}
-	case SUBSCRIBE_TOKEN_NEW_LISTING:
+	case WS_TOKEN_NEW_LISTING_DATA:
 		dd = &WsTokenNewListingData{}
-	case SUBSCRIBE_NEW_PAIR:
+	case WS_NEW_PAIR_DATA:
 		dd = &WsNewPairData{}
-	case SUBSCRIBE_LARGE_TRADE_TXS:
+	case WS_TXS_LARGE_TRADE_DATA:
 		dd = &WsLargeTradeTxsData{}
-	case SUBSCRIBE_WALLET_TXS:
+	case WS_WALLET_TXS_DATA:
 		dd = &WsWalletTxsData{}
+	default:
+		c.logger.Error("birdeye: unknown message type", "type", t, "data", string(b))
+		return
 	}
 	err = json.Unmarshal(b, dd)
 	if err != nil {
@@ -433,7 +508,7 @@ func (c *WsClient) msgHandler(b []byte) {
 	}
 	c.muSubers.RLock()
 	defer c.muSubers.RUnlock()
-	subers := c.subers[t]
+	subers := c.subers[WsDataType(t)]
 	for _, suber := range subers {
 		suber := suber
 		go func() {
@@ -448,27 +523,33 @@ func (c *WsClient) msgHandler(b []byte) {
 	}
 }
 
-func (c *WsClient) Subscribe(t WsSubType) <-chan any {
+func (c *WsClient) WsSub(d any) error {
+	c.muRW.Lock()
+	defer c.muRW.Unlock()
+	return c.ws.WriteJSON(d)
+}
+
+func (c *WsClient) NewDataChan(t WsDataType) <-chan any {
 	c.muSubers.Lock()
 	defer c.muSubers.Unlock()
-	ch := make(chan any)
+	ch := make(chan any, 100)
 	c.subers[t] = append(c.subers[t], ch)
 	return ch
 }
 
-func (c *WsClient) Unsubscribe(t WsSubType, ch <-chan any) {
-	c.muSubers.Lock()
-	defer c.muSubers.Unlock()
-	for i, suber := range c.subers[t] {
-		if suber != ch {
-			continue
-		}
-		close(suber)
-		if i == len(c.subers[t])-1 {
-			c.subers[t] = c.subers[t][:i]
-		} else {
-			c.subers[t] = append(c.subers[t][:i], c.subers[t][i+1:]...)
-		}
-		break
-	}
-}
+// func (c *WsClient) Unsubscribe(t WsSubType, ch <-chan any) {
+// 	c.muSubers.Lock()
+// 	defer c.muSubers.Unlock()
+// 	for i, suber := range c.subers[t] {
+// 		if suber != ch {
+// 			continue
+// 		}
+// 		close(suber)
+// 		if i == len(c.subers[t])-1 {
+// 			c.subers[t] = c.subers[t][:i]
+// 		} else {
+// 			c.subers[t] = append(c.subers[t][:i], c.subers[t][i+1:]...)
+// 		}
+// 		break
+// 	}
+// }
