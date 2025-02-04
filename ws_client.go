@@ -395,6 +395,9 @@ func NewWsClient(chain, apiKey string, logger *slog.Logger) *WsClient {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	}
+	if apiKey == "" {
+		panic("birdeye: api key is required")
+	}
 	url := fmt.Sprintf("wss://public-api.birdeye.so/socket/%s?x-api-key=%s", chain, apiKey)
 	return &WsClient{url: url, subers: make(map[WsDataType][]chan any), logger: logger}
 }
