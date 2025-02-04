@@ -91,35 +91,35 @@ func (d WsPriceSubData) Query() string {
 
 type WsPriceData struct {
 	// Open price
-	O float64 `json:"o"`
+	O float64 `json:"o" bson:"o"`
 	// High price
-	H float64 `json:"h"`
+	H float64 `json:"h" bson:"h"`
 	// Low price
-	L float64 `json:"l"`
+	L float64 `json:"l" bson:"l"`
 	// Close price
-	C float64 `json:"c"`
+	C float64 `json:"c" bson:"c"`
 	// Event type (e.g. "ohlcv")
-	EventType string `json:"eventType"`
+	EventType string `json:"eventType" bson:"eventType"`
 	// Chart type (e.g. "1m")
-	Type ChartType `json:"type"`
+	Type ChartType `json:"type" bson:"type"`
 	// UnixTime seconds
-	UnixTime int64 `json:"unixTime"`
+	UnixTime int64 `json:"unixTime" bson:"unixTime"`
 	// Volume
-	V float64 `json:"v"`
+	V float64 `json:"v" bson:"v"`
 	// Token/Pair symbol, e.g. "SOL"/"SOL-USDC"
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token/Pair address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 }
 
 type WsTxsSubData struct {
 	// QueryType: "simple"
-	QueryType WsQueryType `json:"queryType"`
+	QueryType WsQueryType `json:"queryType" bson:"queryType"`
 	// set token address or pair address, not both
 	// Token address
-	Address string `json:"address,omitempty"`
+	Address string `json:"address,omitempty" bson:"address,omitempty"`
 	// Pair address
-	PairAddress string `json:"pairAddress,omitempty"`
+	PairAddress string `json:"pairAddress,omitempty" bson:"pairAddress,omitempty"`
 }
 
 func (d WsTxsSubData) Query() string {
@@ -131,84 +131,84 @@ func (d WsTxsSubData) Query() string {
 
 type WsTxTokenInfo struct {
 	// Token symbol
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token decimals
-	Decimals int `json:"decimals"`
+	Decimals int `json:"decimals" bson:"decimals"`
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Raw amount
-	Amount any `json:"amount"`
+	Amount any `json:"amount" bson:"amount"`
 	// Transaction type
-	Type string `json:"type"`
+	Type string `json:"type" bson:"type"`
 	// Swap type (from/to)
-	TypeSwap string `json:"typeSwap"`
+	TypeSwap string `json:"typeSwap" bson:"typeSwap"`
 	// UI formatted amount
-	UiAmount float64 `json:"uiAmount"`
+	UiAmount float64 `json:"uiAmount" bson:"uiAmount"`
 	// Token price
-	Price float64 `json:"price,omitempty"`
+	Price float64 `json:"price,omitempty" bson:"price,omitempty"`
 	// Nearest price if price is not available
-	NearestPrice float64 `json:"nearestPrice"`
+	NearestPrice float64 `json:"nearestPrice" bson:"nearestPrice"`
 	// Raw change amount
-	ChangeAmount any `json:"changeAmount"`
+	ChangeAmount any `json:"changeAmount" bson:"changeAmount"`
 	// UI formatted change amount
-	UiChangeAmount float64 `json:"uiChangeAmount"`
+	UiChangeAmount float64 `json:"uiChangeAmount" bson:"uiChangeAmount"`
 	// Token icon URL
-	Icon string `json:"icon,omitempty"`
+	Icon string `json:"icon,omitempty" bson:"icon,omitempty"`
 }
 
 type WsTxsData struct {
 	// Block unix time
-	BlockUnixTime int64 `json:"blockUnixTime"`
+	BlockUnixTime int64 `json:"blockUnixTime" bson:"blockUnixTime"`
 	// Owner address
-	Owner string `json:"owner"`
+	Owner string `json:"owner" bson:"owner"`
 	// Source platform
-	Source string `json:"source"`
+	Source string `json:"source" bson:"source"`
 	// Transaction hash
-	TxHash string `json:"txHash"`
+	TxHash string `json:"txHash" bson:"txHash"`
 	// Alias name
-	Alias *string `json:"alias"`
+	Alias *string `json:"alias" bson:"alias"`
 	// Whether trade happened on Birdeye
-	IsTradeOnBe bool `json:"isTradeOnBe"`
+	IsTradeOnBe bool `json:"isTradeOnBe" bson:"isTradeOnBe"`
 	// Platform address
-	Platform string `json:"platform"`
+	Platform string `json:"platform" bson:"platform"`
 	// Volume in USD
-	VolumeUSD float64 `json:"volumeUSD"`
+	VolumeUSD float64 `json:"volumeUSD" bson:"volumeUSD"`
 	// From token info
-	From WsTxTokenInfo `json:"from"`
+	From WsTxTokenInfo `json:"from" bson:"from"`
 	// To token info
-	To WsTxTokenInfo `json:"to"`
+	To WsTxTokenInfo `json:"to" bson:"to"`
 }
 
 type WsBaseQuotePriceSubData struct {
 	// Base token address
-	BaseAddress string `json:"baseAddress"`
+	BaseAddress string `json:"baseAddress" bson:"baseAddress"`
 	// Quote token address
-	QuoteAddress string `json:"quoteAddress"`
+	QuoteAddress string `json:"quoteAddress" bson:"quoteAddress"`
 	// Chart type/interval
-	ChartType ChartType `json:"chartType"`
+	ChartType ChartType `json:"chartType" bson:"chartType"`
 }
 
 type WsBaseQuotePriceData struct {
 	// Open price
-	O float64 `json:"o"`
+	O float64 `json:"o" bson:"o"`
 	// High price
-	H float64 `json:"h"`
+	H float64 `json:"h" bson:"h"`
 	// Low price
-	L float64 `json:"l"`
+	L float64 `json:"l" bson:"l"`
 	// Close price
-	C float64 `json:"c"`
+	C float64 `json:"c" bson:"c"`
 	// Event type
-	EventType string `json:"eventType"`
+	EventType string `json:"eventType" bson:"eventType"`
 	// Chart type/interval
-	Type string `json:"type"`
+	Type string `json:"type" bson:"type"`
 	// Unix timestamp
-	UnixTime int64 `json:"unixTime"`
+	UnixTime int64 `json:"unixTime" bson:"unixTime"`
 	// Volume is 0
-	V float64 `json:"v"`
+	V float64 `json:"v" bson:"v"`
 	// Base token address
-	BaseAddress string `json:"baseAddress"`
+	BaseAddress string `json:"baseAddress" bson:"baseAddress"`
 	// Quote token address
-	QuoteAddress string `json:"quoteAddress"`
+	QuoteAddress string `json:"quoteAddress" bson:"quoteAddress"`
 }
 
 // WsTokenNewListingSubData represents subscription data for new token listing notifications
@@ -220,61 +220,61 @@ type WsBaseQuotePriceData struct {
 //   - MaxLiquidity: Optional. Maximum liquidity threshold for notifications. When provided, must be higher than MinLiquidity.
 type WsTokenNewListingSubData struct {
 	// Whether meme platform is enabled
-	MemePlatformEnabled bool `json:"meme_platform_enabled,omitempty"`
+	MemePlatformEnabled bool `json:"meme_platform_enabled,omitempty" bson:"meme_platform_enabled,omitempty"`
 	// Minimum liquidity
-	MinLiquidity float64 `json:"min_liquidity,omitempty"`
+	MinLiquidity float64 `json:"min_liquidity,omitempty" bson:"min_liquidity,omitempty"`
 	// Maximum liquidity
-	MaxLiquidity float64 `json:"max_liquidity,omitempty"`
+	MaxLiquidity float64 `json:"max_liquidity,omitempty" bson:"max_liquidity,omitempty"`
 }
 
 type WsTokenNewListingData struct {
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Token decimals
-	Decimals int64 `json:"decimals"`
+	Decimals int64 `json:"decimals" bson:"decimals"`
 	// Token name
-	Name string `json:"name"`
+	Name string `json:"name" bson:"name"`
 	// Token symbol
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token liquidity in USD
-	Liquidity float64 `json:"liquidity"`
+	Liquidity float64 `json:"liquidity" bson:"liquidity"`
 	// Unix timestamp when liquidity was added
-	LiquidityAddedAt string `json:"liquidityAddedAt"`
+	LiquidityAddedAt string `json:"liquidityAddedAt" bson:"liquidityAddedAt"`
 }
 
 type WsNewPairSubData struct {
 	// Minimum liquidity
-	MinLiquidity float64 `json:"min_liquidity,omitempty"`
+	MinLiquidity float64 `json:"min_liquidity,omitempty" bson:"min_liquidity,omitempty"`
 	// Maximum liquidity
-	MaxLiquidity float64 `json:"max_liquidity,omitempty"`
+	MaxLiquidity float64 `json:"max_liquidity,omitempty" bson:"max_liquidity,omitempty"`
 }
 
 type WsNewPairTokenInfo struct {
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Token name
-	Name string `json:"name"`
+	Name string `json:"name" bson:"name"`
 	// Token symbol
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token decimals
-	Decimals int64 `json:"decimals"`
+	Decimals int64 `json:"decimals" bson:"decimals"`
 }
 
 type WsNewPairData struct {
 	// Pair address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Pair name
-	Name string `json:"name"`
+	Name string `json:"name" bson:"name"`
 	// Source of the pair
-	Source string `json:"source"`
+	Source string `json:"source" bson:"source"`
 	// Base token info
-	Base WsNewPairTokenInfo `json:"base"`
+	Base WsNewPairTokenInfo `json:"base" bson:"base"`
 	// Quote token info
-	Quote WsNewPairTokenInfo `json:"quote"`
+	Quote WsNewPairTokenInfo `json:"quote" bson:"quote"`
 	// Transaction hash
-	TxHash string `json:"txHash"`
+	TxHash string `json:"txHash" bson:"txHash"`
 	// Block time
-	BlockTime string `json:"blockTime"`
+	BlockTime string `json:"blockTime" bson:"blockTime"`
 }
 
 // WsLargeTradeTxsSubData represents the subscription data for large trade transactions.
@@ -289,92 +289,92 @@ type WsNewPairData struct {
 // regardless of the specific tokens or trading pairs involved.
 type WsLargeTradeTxsSubData struct {
 	// SubType: "SUBSCRIBE_LARGE_TRADE_TXS"
-	Type WsSubType `json:"type"`
+	Type WsSubType `json:"type" bson:"type"`
 	// Minimum volume in USD
-	MinVolume float64 `json:"min_volume"`
+	MinVolume float64 `json:"min_volume" bson:"min_volume"`
 	// Maximum volume in USD
-	MaxVolume float64 `json:"max_volume,omitempty"`
+	MaxVolume float64 `json:"max_volume,omitempty" bson:"max_volume,omitempty"`
 }
 
 type WsLargeTradeTxsTokenInfo struct {
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Token name
-	Name string `json:"name"`
+	Name string `json:"name" bson:"name"`
 	// Token symbol
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token decimals
-	Decimals int64 `json:"decimals"`
+	Decimals int64 `json:"decimals" bson:"decimals"`
 	// Token amount in UI format
-	UiAmount float64 `json:"uiAmount"`
+	UiAmount float64 `json:"uiAmount" bson:"uiAmount"`
 	// Token price
-	Price float64 `json:"price"`
+	Price float64 `json:"price" bson:"price"`
 	// Nearest token price
-	NearestPrice float64 `json:"nearestPrice"`
+	NearestPrice float64 `json:"nearestPrice" bson:"nearestPrice"`
 	// Token amount change in UI format
-	UiChangeAmount float64 `json:"uiChangeAmount"`
+	UiChangeAmount float64 `json:"uiChangeAmount" bson:"uiChangeAmount"`
 }
 
 type WsLargeTradeTxsData struct {
 	// Block unix timestamp seconds
-	BlockUnixTime int64 `json:"blockUnixTime"`
+	BlockUnixTime int64 `json:"blockUnixTime" bson:"blockUnixTime"`
 	// Block time in human readable format
-	BlockHumanTime string `json:"blockHumanTime"`
+	BlockHumanTime string `json:"blockHumanTime" bson:"blockHumanTime"`
 	// Owner address
-	Owner string `json:"owner"`
+	Owner string `json:"owner" bson:"owner"`
 	// Source of the trade
-	Source string `json:"source"`
+	Source string `json:"source" bson:"source"`
 	// Pool address
-	PoolAddress string `json:"poolAddress"`
+	PoolAddress string `json:"poolAddress" bson:"poolAddress"`
 	// Transaction hash
-	TxHash string `json:"txHash"`
+	TxHash string `json:"txHash" bson:"txHash"`
 	// Volume in USD
-	VolumeUSD float64 `json:"volumeUSD"`
+	VolumeUSD float64 `json:"volumeUSD" bson:"volumeUSD"`
 	// Network name
-	Network string `json:"network"`
+	Network string `json:"network" bson:"network"`
 	// From token info
-	From WsLargeTradeTxsTokenInfo `json:"from"`
+	From WsLargeTradeTxsTokenInfo `json:"from" bson:"from"`
 	// To token info
-	To WsLargeTradeTxsTokenInfo `json:"to"`
+	To WsLargeTradeTxsTokenInfo `json:"to" bson:"to"`
 }
 
 type WsWalletTxsSubData struct {
 	// Wallet address to monitor
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 }
 
 type WsWalletTxsTokenInfo struct {
 	// Token symbol
-	Symbol string `json:"symbol"`
+	Symbol string `json:"symbol" bson:"symbol"`
 	// Token decimals
-	Decimals int64 `json:"decimals"`
+	Decimals int64 `json:"decimals" bson:"decimals"`
 	// Token address
-	Address string `json:"address"`
+	Address string `json:"address" bson:"address"`
 	// Token amount in UI format
-	UiAmount float64 `json:"uiAmount"`
+	UiAmount float64 `json:"uiAmount" bson:"uiAmount"`
 }
 
 type WsWalletTxsData struct {
 	// Transaction type
-	Type string `json:"type"`
+	Type string `json:"type" bson:"type"`
 	// Block unix timestamp seconds
-	BlockUnixTime int64 `json:"blockUnixTime"`
+	BlockUnixTime int64 `json:"blockUnixTime" bson:"blockUnixTime"`
 	// Block time in human readable format
-	BlockHumanTime string `json:"blockHumanTime"`
+	BlockHumanTime string `json:"blockHumanTime" bson:"blockHumanTime"`
 	// Owner address
-	Owner string `json:"owner"`
+	Owner string `json:"owner" bson:"owner"`
 	// Source address
-	Source string `json:"source"`
+	Source string `json:"source" bson:"source"`
 	// Transaction hash
-	TxHash string `json:"txHash"`
+	TxHash string `json:"txHash" bson:"txHash"`
 	// Volume in USD
-	VolumeUSD float64 `json:"volumeUSD"`
+	VolumeUSD float64 `json:"volumeUSD" bson:"volumeUSD"`
 	// Network name
-	Network string `json:"network"`
+	Network string `json:"network" bson:"network"`
 	// Base token info
-	Base WsWalletTxsTokenInfo `json:"base"`
+	Base WsWalletTxsTokenInfo `json:"base" bson:"base"`
 	// Quote token info
-	Quote WsWalletTxsTokenInfo `json:"quote"`
+	Quote WsWalletTxsTokenInfo `json:"quote" bson:"quote"`
 }
 
 type WsClient struct {
