@@ -432,6 +432,8 @@ func (c *WsClient) reConn() {
 			continue
 		}
 		c.logger.Info("birdeye: reconnected to websocket")
+		c.muRW.Lock()
+		defer c.muRW.Unlock()
 		for _, sub := range c.subs {
 			c.logger.Info("birdeye: resubscribing", "sub", sub)
 			err := c.WsSub(sub)
@@ -538,6 +540,7 @@ func (c *WsClient) msgHandler(b []byte) {
 func (c *WsClient) WsSub(d any) error {
 	c.muRW.Lock()
 	defer c.muRW.Unlock()
+	c.subs = append(c.subs, d)
 	return c.ws.WriteJSON(d)
 }
 
