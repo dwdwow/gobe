@@ -455,7 +455,7 @@ func (c *WsClient) waiter() {
 		if err != nil {
 			c.logger.Error("birdeye: websocket read error", "error", err)
 			c.reConn()
-			continue
+			return
 		}
 		switch t {
 		case websocket.BinaryMessage:
