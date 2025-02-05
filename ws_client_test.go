@@ -56,6 +56,7 @@ func TestWsClientTxs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	fmt.Println("started")
 	tokenData := gobe.WsTxsSubData{
 		QueryType: gobe.QUERY_TYPE_SIMPLE,
 		Address:   "So11111111111111111111111111111111111111112",

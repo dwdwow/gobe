@@ -390,6 +390,8 @@ type WsClient struct {
 
 	subs []any
 
+	chWelcome chan struct{}
+
 	logger *slog.Logger
 }
 
@@ -401,7 +403,7 @@ func NewWsClient(chain, apiKey string, logger *slog.Logger) *WsClient {
 		panic("birdeye: api key is required")
 	}
 	url := fmt.Sprintf("wss://public-api.birdeye.so/socket/%s?x-api-key=%s", chain, apiKey)
-	return &WsClient{url: url, subers: make(map[WsDataType][]chan any), logger: logger}
+	return &WsClient{url: url, subers: make(map[WsDataType][]chan any), chWelcome: make(chan struct{}), logger: logger}
 }
 
 func (c *WsClient) Start() error {
@@ -415,6 +417,7 @@ func (c *WsClient) Start() error {
 	}
 	c.ws = conn
 	go c.waiter()
+	<-c.chWelcome
 	return nil
 }
 
@@ -492,6 +495,7 @@ func (c *WsClient) msgHandler(b []byte) {
 	var dd any
 	switch WsDataType(t) {
 	case WS_WELCOME_DATA:
+		c.chWelcome <- struct{}{}
 		c.logger.Info("birdeye: welcome message", "data", string(b))
 		return
 	case WS_ERROR_DATA:
