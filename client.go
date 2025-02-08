@@ -112,6 +112,7 @@ const (
 type RankType string
 
 const (
+	RANK_RANK         RankType = "rank"
 	RANK_LIQUIDITY    RankType = "liquidity"
 	RANK_VOLUME24HUSD RankType = "volume24hUSD"
 )
