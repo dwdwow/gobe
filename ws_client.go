@@ -447,7 +447,15 @@ func (c *WsClient) reConn() {
 }
 
 func (c *WsClient) Close() error {
-	return c.ws.Close()
+	_ = c.ws.Close()
+	// wait channel writing to finish
+	time.Sleep(time.Millisecond * 50)
+	for _, subers := range c.subers {
+		for _, suber := range subers {
+			close(suber)
+		}
+	}
+	return nil
 }
 
 func (c *WsClient) waiter() {
@@ -528,6 +536,12 @@ func (c *WsClient) msgHandler(b []byte) {
 	for _, suber := range subers {
 		suber := suber
 		go func() {
+			defer func() {
+				// channel may be closed
+				if r := recover(); r != nil {
+					c.logger.Error("birdeye: panic in suber", "error", r)
+				}
+			}()
 			timer := time.NewTimer(10 * time.Second)
 			defer timer.Stop()
 			select {
